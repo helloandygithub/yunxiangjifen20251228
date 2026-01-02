@@ -91,6 +91,14 @@ echo "服务状态检查"
 echo "============================================"
 docker-compose -f docker-compose.prod.yml ps
 
+# 执行数据库迁移
+echo ""
+echo "============================================"
+echo "执行数据库迁移"
+echo "============================================"
+echo "正在检查并更新数据库结构..."
+docker-compose -f docker-compose.prod.yml exec -T backend python /app/scripts/update_db.py || echo "⚠️ 数据库迁移警告（非致命）"
+
 # 健康检查
 echo ""
 echo "============================================"

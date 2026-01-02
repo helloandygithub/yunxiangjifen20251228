@@ -45,6 +45,7 @@ services:
       - "8000:8000"
     volumes:
       - ./uploads:/app/uploads
+      - ./scripts:/app/scripts
     environment:
       - DATABASE_URL=mysql+pymysql://${MYSQL_USER}:${MYSQL_PASSWORD}@mysql:3306/points_platform
       - REDIS_URL=redis://redis:6379/0

@@ -66,7 +66,11 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(BigInteger, primary_key=True, autoincrement=True)
-    phone = Column(String(20), unique=True, nullable=False, index=True)
+    phone = Column(String(20), unique=True, nullable=True, index=True)  # Allow null for WeChat-only users initially
+    wx_openid = Column(String(64), unique=True, nullable=True, index=True)
+    wx_unionid = Column(String(64), unique=True, nullable=True, index=True)
+    nickname = Column(String(64), nullable=True)
+    avatar_url = Column(String(500), nullable=True)
     points_balance = Column(Integer, default=0)
     fingerprint_hash = Column(String(255))
     referrer_id = Column(BigInteger, ForeignKey("users.id"), nullable=True)

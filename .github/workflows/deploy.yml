@@ -16,11 +16,45 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # 进入项目目录 (假设目录是这个，如果不同请修改)
-            cd /Users/kongkevin/云享积分20251228 || cd /home/ubuntu/yunxiangjifen20251228 || echo "Directory not found!"
+            # 1. 确定项目目录 (根据探测结果)
+            # 优先尝试 /home/root/points-platform (通常也是 /root/points-platform)
+            # 其次尝试 /home/ubuntu/points-platform
+            PROJECT_DIR="/root/points-platform"
+            if [ ! -d "$PROJECT_DIR" ]; then
+              PROJECT_DIR="/home/ubuntu/points-platform"
+            fi
             
-            # 拉取最新代码
-            git pull origin main
+            # 如果目录还是不存在，尝试从已知路径推断 (兜底)
+            if [ ! -d "$PROJECT_DIR" ]; then
+               PROJECT_DIR=$(find /home -name "points-platform" -type d -maxdepth 3 2>/dev/null | head -n 1)
+            fi
+            
+            if [ -z "$PROJECT_DIR" ]; then
+              echo "❌ 无法找到项目目录 points-platform，请手动确认服务器路径！"
+              exit 1
+            fi
+            
+            echo "✅ 锁定部署目录: $PROJECT_DIR"
+            cd "$PROJECT_DIR" || exit 1
+
+            # 2. 强制同步代码 (将当前目录变为 Git 仓库并覆盖)
+            # 注意：这不会删除 .env 和 uploads，因为它们在 .gitignore 里
+            if [ ! -d ".git" ]; then
+              echo "⚙️ 初始化 Git 仓库..."
+              git init
+              git remote add origin git@github.com:helloandygithub/yunxiangjifen20251228.git
+            else
+              # 确保 remote 是正确的
+              if ! git remote | grep -q "origin"; then
+                 git remote add origin git@github.com:helloandygithub/yunxiangjifen20251228.git
+              else
+                 git remote set-url origin git@github.com:helloandygithub/yunxiangjifen20251228.git
+              fi
+            fi
+
+            echo "⬇️ 拉取最新代码..."
+            git fetch --all
+            git reset --hard origin/main
             
             # 执行部署脚本
             # 赋予脚本执行权限
