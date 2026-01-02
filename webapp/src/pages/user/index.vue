@@ -88,11 +88,19 @@
 
     <!-- 退出登录 -->
     <!-- 退出登录 -->
-    <view v-if="userStore.isLoggedIn" class="logout-btn" @tap="handleLogout">
-      <text>退出登录</text>
+    <view v-if="userStore.isLoggedIn">
+      <view class="logout-btn" @tap="handleLogout">
+        <text>退出登录</text>
+      </view>
+      
+      <view class="delete-account" @tap="handleDeleteAccount">
+        <text>注销账号</text>
+      </view>
     </view>
   </view>
 </template>
+
+
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
@@ -172,11 +180,40 @@ const handleLogout = async () => {
   try {
     await uni.showModal({
       title: '提示',
-      content: '确定要退出登录吗？'
+      content: '确定要退出登录吗？',
+      confirmColor: '#FF6B35'
     })
     
     userStore.logout()
     uni.reLaunch({ url: '/pages/login/index' })
+  } catch {
+    // 取消
+  }
+}
+
+const handleDeleteAccount = async () => {
+  try {
+    await uni.showModal({
+      title: '警告',
+      content: '注销账号将永久删除您的所有数据，且无法恢复。确定继续吗？',
+      confirmText: '确认注销',
+      confirmColor: '#F56C6C',
+      cancelText: '取消'
+    })
+    
+    // 这里应该调用后端注销接口，目前暂用退出登录模拟
+    // await post('/user/delete') 
+    
+    uni.showToast({
+      title: '账号已注销',
+      icon: 'none'
+    })
+    
+    setTimeout(() => {
+      userStore.logout()
+      uni.reLaunch({ url: '/pages/login/index' })
+    }, 1500)
+    
   } catch {
     // 取消
   }
@@ -409,7 +446,7 @@ onMounted(() => {
 }
 
 .logout-btn {
-  margin: 40rpx 32rpx;
+  margin: 40rpx 32rpx 20rpx;
   height: 88rpx;
   background: #fff;
   border-radius: 44rpx;
@@ -419,5 +456,17 @@ onMounted(() => {
   color: #F56C6C;
   font-size: 30rpx;
   box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.05);
+}
+
+.delete-account {
+  text-align: center;
+  padding: 20rpx;
+  padding-bottom: 60rpx;
+  
+  text {
+    font-size: 24rpx;
+    color: #999;
+    text-decoration: underline;
+  }
 }
 </style>
