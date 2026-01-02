@@ -18,7 +18,8 @@ export const useUserStore = defineStore('user', () => {
 
   const login = async (phone, code, referrerCode = '') => {
     const res = await post('/auth/login', { phone, code, referrer_code: referrerCode })
-    token.value = res.data.token
+    // 后端返回的是 access_token，不是 token
+    token.value = res.data.access_token
     userInfo.value = res.data.user
     uni.setStorageSync('token', token.value)
     uni.setStorageSync('userInfo', JSON.stringify(res.data.user))
