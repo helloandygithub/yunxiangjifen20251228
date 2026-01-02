@@ -18,8 +18,12 @@ def send_sms_code(phone: str, code: str) -> bool:
     Returns:
         bool: 发送是否成功
     """
+    # 确定可以使用的密钥
+    secret_id = settings.SMS_SECRET_ID or settings.COS_SECRET_ID
+    secret_key = settings.SMS_SECRET_KEY or settings.COS_SECRET_KEY
+
     # 检查配置是否完整
-    if not all([settings.COS_SECRET_ID, settings.COS_SECRET_KEY, 
+    if not all([secret_id, secret_key, 
                 settings.SMS_SDK_APP_ID, settings.SMS_TEMPLATE_ID]):
         logger.warning("短信服务配置不完整，使用开发模式")
         # 开发模式：打印验证码到日志
@@ -29,8 +33,8 @@ def send_sms_code(phone: str, code: str) -> bool:
     try:
         # 腾讯云凭证
         cred = credential.Credential(
-            settings.COS_SECRET_ID, 
-            settings.COS_SECRET_KEY
+            secret_id, 
+            secret_key
         )
         
         # 创建客户端

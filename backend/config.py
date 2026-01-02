@@ -29,6 +29,8 @@ class Settings(BaseSettings):
     SMS_SDK_APP_ID: str = ""
     SMS_SIGN_NAME: str = ""
     SMS_TEMPLATE_ID: str = ""
+    SMS_SECRET_ID: str = ""  # 专用短信密钥ID（可选，默认使用COS密钥）
+    SMS_SECRET_KEY: str = ""  # 专用短信密钥Key（可选）
     
     # 微信小程序配置
     WX_APPID: str = ""

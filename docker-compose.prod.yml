@@ -63,6 +63,8 @@ services:
       - SMS_SDK_APP_ID=${SMS_SDK_APP_ID}
       - SMS_SIGN_NAME=${SMS_SIGN_NAME}
       - SMS_TEMPLATE_ID=${SMS_TEMPLATE_ID}
+      - SMS_SECRET_ID=${SMS_SECRET_ID}
+      - SMS_SECRET_KEY=${SMS_SECRET_KEY}
       - WX_APPID=${WECHAT_APP_ID}
       - WX_SECRET=febfddfd6d16f8c8473da11b5352528d
     depends_on:
