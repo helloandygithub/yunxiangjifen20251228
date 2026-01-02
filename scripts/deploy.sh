@@ -62,6 +62,16 @@ cd ..
 echo -e "${GREEN}✓ 用户端PC构建完成${NC}"
 echo ""
 
+echo -e "${YELLOW}[4.5/8] 构建H5端...${NC}"
+cd webapp
+if [ ! -d "node_modules" ]; then
+    npm install
+fi
+npm run build:h5
+cd ..
+echo -e "${GREEN}✓ H5端构建完成${NC}"
+echo ""
+
 # 停止旧服务
 echo -e "${YELLOW}[5/8] 停止旧服务...${NC}"
 docker-compose -f docker-compose.prod.yml down || true
