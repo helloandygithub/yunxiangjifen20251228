@@ -51,7 +51,7 @@ services:
       - ./uploads:/app/uploads
       - ./scripts:/app/scripts
     environment:
-      - DATABASE_URL=mysql+pymysql://${MYSQL_USER}:${MYSQL_PASSWORD}@mysql:3306/points_platform
+      - DATABASE_URL=mysql+pymysql://points_user:YunXiangPoints2025DB@mysql:3306/points_platform
       - REDIS_URL=redis://redis:6379/0
       - SECRET_KEY=${SECRET_KEY}
       - DEBUG=false
