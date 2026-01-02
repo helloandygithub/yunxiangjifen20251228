@@ -25,6 +25,11 @@
 
     <!-- 微信一键登录 -->
     <view class="form">
+      <!-- 暂不登录按钮 -->
+      <view class="skip-login" @tap="skipLogin">
+        <text>暂不登录，随便看看 ></text>
+      </view>
+
       <view class="form-label">邀请码 (选填)</view>
       <view class="input-wrapper">
         <input 
@@ -93,10 +98,18 @@
       </view>
 
       <view class="agreement">
-        <text>登录即表示同意</text>
-        <text class="link">《用户协议》</text>
-        <text>和</text>
-        <text class="link">《隐私政策》</text>
+        <checkbox-group @change="onAgreementChange">
+          <label class="agreement-label">
+            <checkbox :checked="agreed" color="#FF6B35" />
+            <text class="agreement-text">
+              我已阅读并同意
+              <text class="link" @tap.stop="openUserAgreement">《用户协议》</text>
+              和
+              <text class="link" @tap.stop="openPrivacyPolicy">《隐私政策》</text>
+            </text>
+          </label>
+        </checkbox-group>
+        <view v-if="!agreed" class="agreement-tip">请先阅读并同意协议</view>
       </view>
     </view>
   </view>
@@ -112,6 +125,7 @@ const userStore = useUserStore()
 const loading = ref(false)
 const countdown = ref(0)
 const showSmsLogin = ref(false)
+const agreed = ref(false)  // 用户是否同意协议
 let timer = null
 
 const form = reactive({
@@ -125,6 +139,12 @@ const canLogin = computed(() => isPhoneValid.value && form.code.length >= 4)
 
 // 微信一键登录
 const handleWxLogin = async (e) => {
+  // 检查是否同意协议
+  if (!agreed.value) {
+    uni.showToast({ title: '请先阅读并同意用户协议和隐私政策', icon: 'none' })
+    return
+  }
+  
   if (e.detail.errMsg !== 'getPhoneNumber:ok') {
     uni.showToast({ title: '需要授权手机号才能登录', icon: 'none' })
     return
@@ -192,6 +212,10 @@ const sendCode = async () => {
 
 // 短信验证码登录
 const handleSmsLogin = async () => {
+  if (!agreed.value) {
+    uni.showToast({ title: '请先阅读并同意用户协议和隐私政策', icon: 'none' })
+    return
+  }
   if (!canLogin.value || loading.value) return
 
   loading.value = true
@@ -208,6 +232,26 @@ const handleSmsLogin = async () => {
   } finally {
     loading.value = false
   }
+}
+
+// 协议勾选变化
+const onAgreementChange = (e) => {
+  agreed.value = e.detail.value.length > 0
+}
+
+// 暂不登录，返回首页
+const skipLogin = () => {
+  uni.switchTab({ url: '/pages/index/index' })
+}
+
+// 打开用户协议
+const openUserAgreement = () => {
+  uni.navigateTo({ url: '/pages/agreement/user' })
+}
+
+// 打开隐私政策
+const openPrivacyPolicy = () => {
+  uni.navigateTo({ url: '/pages/agreement/privacy' })
 }
 </script>
 
@@ -422,6 +466,7 @@ const handleSmsLogin = async () => {
       checkbox {
         margin-right: 12rpx;
         flex-shrink: 0;
+        transform: scale(0.8);
       }
       
       .agreement-text {
@@ -432,6 +477,24 @@ const handleSmsLogin = async () => {
           color: #FF6B35;
         }
       }
+    }
+    
+    .agreement-tip {
+      font-size: 22rpx;
+      color: #F56C6C;
+      margin-top: 8rpx;
+      padding-left: 40rpx;
+    }
+  }
+  
+  // 暂不登录按钮
+  .skip-login {
+    text-align: right;
+    margin-bottom: 24rpx;
+    
+    text {
+      font-size: 26rpx;
+      color: #909399;
     }
   }
 }
