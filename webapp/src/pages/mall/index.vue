@@ -8,11 +8,12 @@
         
         <!-- 积分卡片 -->
         <view class="points-card">
-          <view class="points-left">
+          <view class="points-left" @tap="handlePointsClick">
             <text class="points-label">可用积分</text>
             <view class="points-row">
               <text class="points-icon">💰</text>
-              <text class="points-value">{{ formatNumber(userStore.userInfo?.points_balance || 0) }}</text>
+              <text class="points-value" v-if="isLoggedIn">{{ formatNumber(userStore.userInfo?.points_balance || 0) }}</text>
+              <text class="points-login" v-else>登录查看</text>
             </view>
           </view>
           <view class="points-btn" @tap="goToPointsDetail">
@@ -87,11 +88,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
 import { useUserStore } from '@/stores/user'
 import { get } from '@/utils/request'
 
 const userStore = useUserStore()
+
+const isLoggedIn = computed(() => userStore.isLoggedIn)
 
 const loading = ref(false)
 const products = ref([])
@@ -135,12 +139,29 @@ const goToDetail = (item) => {
 }
 
 const goToPointsDetail = () => {
+  if (!isLoggedIn.value) {
+    uni.navigateTo({ url: '/pages/login/index' })
+    return
+  }
   uni.navigateTo({ url: '/pages/user/records?type=points' })
+}
+
+const handlePointsClick = () => {
+  if (!isLoggedIn.value) {
+    uni.navigateTo({ url: '/pages/login/index' })
+  }
 }
 
 onMounted(() => {
   fetchProducts()
-  if (userStore.isLoggedIn) {
+  if (isLoggedIn.value) {
+    userStore.fetchUserInfo()
+  }
+})
+
+onShow(() => {
+  // 登录态变化时刷新数据
+  if (isLoggedIn.value) {
     userStore.fetchUserInfo()
   }
 })
@@ -209,6 +230,12 @@ onMounted(() => {
         font-size: 56rpx;
         font-weight: bold;
         color: #F5A623;
+      }
+      
+      .points-login {
+        font-size: 32rpx;
+        color: #F5A623;
+        text-decoration: underline;
       }
     }
   }

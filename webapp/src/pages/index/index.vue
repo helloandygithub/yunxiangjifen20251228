@@ -12,12 +12,12 @@
             </view>
             <view class="user-text">
               <text class="greeting">{{ greeting }}</text>
-              <text class="username">{{ userStore.userInfo?.phone ? formatPhone(userStore.userInfo.phone) : '点击登录' }}</text>
+              <text class="username">{{ isLoggedIn && userInfo?.phone ? formatPhone(userInfo.phone) : '点击登录' }}</text>
             </view>
           </view>
           <view class="user-right">
             <text class="points-label">我的积分</text>
-            <text class="points-value">{{ formatNumber(userStore.userInfo?.points_balance || 0) }}</text>
+            <text class="points-value">{{ formatNumber(userInfo?.points_balance || 0) }}</text>
           </view>
         </view>
         
@@ -131,10 +131,15 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
 import { useUserStore } from '@/stores/user'
 import { get } from '@/utils/request'
 
 const userStore = useUserStore()
+
+// 使用 computed 确保响应式
+const isLoggedIn = computed(() => userStore.isLoggedIn)
+const userInfo = computed(() => userStore.userInfo)
 
 const loading = ref(false)
 const activities = ref([])
@@ -175,7 +180,7 @@ const goToActivity = (item) => {
 }
 
 const goToUser = () => {
-  if (!userStore.isLoggedIn) {
+  if (!isLoggedIn.value) {
     uni.navigateTo({ url: '/pages/login/index' })
   } else {
     uni.switchTab({ url: '/pages/user/index' })
@@ -187,7 +192,7 @@ const goToMall = () => {
 }
 
 const goToRecords = (type) => {
-  if (!userStore.isLoggedIn) {
+  if (!isLoggedIn.value) {
     uni.navigateTo({ url: '/pages/login/index' })
     return
   }
@@ -199,7 +204,7 @@ const goToActivityList = () => {
 }
 
 const handleCheckin = () => {
-  if (!userStore.isLoggedIn) {
+  if (!isLoggedIn.value) {
     uni.navigateTo({ url: '/pages/login/index' })
     return
   }
@@ -207,11 +212,11 @@ const handleCheckin = () => {
 }
 
 const handleInvite = () => {
-  if (!userStore.isLoggedIn) {
+  if (!isLoggedIn.value) {
     uni.navigateTo({ url: '/pages/login/index' })
     return
   }
-  const code = userStore.userInfo?.invite_code || ''
+  const code = userInfo.value?.invite_code || ''
   uni.setClipboardData({
     data: code,
     success: () => {
@@ -222,7 +227,14 @@ const handleInvite = () => {
 
 onMounted(() => {
   fetchActivities()
-  if (userStore.isLoggedIn) {
+  if (isLoggedIn.value) {
+    userStore.fetchUserInfo()
+  }
+})
+
+onShow(() => {
+  // 登录态变化时刷新用户数据
+  if (isLoggedIn.value) {
     userStore.fetchUserInfo()
   }
 })

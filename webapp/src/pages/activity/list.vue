@@ -236,6 +236,10 @@ onMounted(() => {
       font-size: 40rpx;
       font-weight: bold;
       color: #F5A623;
+      
+      &.stat-login {
+        color: #999;
+      }
     }
     
     .stat-label {

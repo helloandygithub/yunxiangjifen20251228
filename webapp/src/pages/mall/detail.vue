@@ -79,8 +79,9 @@
     </template>
 
     <view class="footer safe-area-bottom" v-if="product">
-      <view class="footer-left">
-        <text class="my-points">我的积分: {{ userStore.userInfo?.points_balance || 0 }}</text>
+      <view class="footer-left" @tap="handlePointsClick">
+        <text class="my-points" v-if="isLoggedIn">我的积分: {{ userStore.userInfo?.points_balance || 0 }}</text>
+        <text class="my-points login-hint" v-else>登录查看积分</text>
       </view>
       <view 
         :class="['btn', canRedeem ? 'btn-primary' : 'btn-disabled']"
@@ -94,10 +95,13 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
 import { useUserStore } from '@/stores/user'
 import { get, post } from '@/utils/request'
 
 const userStore = useUserStore()
+
+const isLoggedIn = computed(() => userStore.isLoggedIn)
 
 const productId = ref(null)
 const loading = ref(true)
@@ -113,6 +117,7 @@ const addressForm = reactive({
 const canRedeem = computed(() => {
   if (!product.value) return false
   if (product.value.stock <= 0) return false
+  if (!isLoggedIn.value) return false
   if ((userStore.userInfo?.points_balance || 0) < product.value.price_points) return false
   return true
 })
@@ -120,6 +125,7 @@ const canRedeem = computed(() => {
 const redeemBtnText = computed(() => {
   if (!product.value) return '兑换'
   if (product.value.stock <= 0) return '已售罄'
+  if (!isLoggedIn.value) return '登录后兑换'
   if ((userStore.userInfo?.points_balance || 0) < product.value.price_points) return '积分不足'
   if (submitting.value) return '兑换中...'
   return '立即兑换'
@@ -221,6 +227,12 @@ const handleRedeem = async () => {
   }
 }
 
+const handlePointsClick = () => {
+  if (!isLoggedIn.value) {
+    uni.navigateTo({ url: '/pages/login/index' })
+  }
+}
+
 onMounted(() => {
   const pages = getCurrentPages()
   const currentPage = pages[pages.length - 1]
@@ -228,6 +240,17 @@ onMounted(() => {
   
   if (productId.value) {
     fetchProduct()
+  }
+  
+  if (isLoggedIn.value) {
+    userStore.fetchUserInfo()
+  }
+})
+
+onShow(() => {
+  // 登录态变化时刷新用户数据
+  if (isLoggedIn.value) {
+    userStore.fetchUserInfo()
   }
 })
 </script>
@@ -340,6 +363,11 @@ onMounted(() => {
     .my-points {
       font-size: 26rpx;
       color: #909399;
+      
+      &.login-hint {
+        color: #F5A623;
+        text-decoration: underline;
+      }
     }
   }
   
