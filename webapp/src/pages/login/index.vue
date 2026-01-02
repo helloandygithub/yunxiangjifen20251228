@@ -1,102 +1,91 @@
 <template>
-  <view class="login-container">
-    <!-- Logo和标题 -->
-    <view class="header">
-      <view class="logo">
+  <view class="login-page">
+    <!-- 顶部渐变背景 -->
+    <view class="header-bg">
+      <!-- Logo -->
+      <view class="logo-box">
         <text class="logo-icon">🎁</text>
       </view>
-      <view class="app-name">云享积分</view>
-      <view class="app-desc">参与活动，赚取积分</view>
-    </view>
-
-    <!-- 三个图标装饰 -->
-    <view class="icons-row">
-      <view class="icon-item">
-        <text>🎁</text>
-      </view>
-      <view class="icon-item active">
-        <text>🎁</text>
-      </view>
-      <view class="icon-item">
-        <text>🛡️</text>
+      
+      <!-- 标题 -->
+      <view class="title">云享积分</view>
+      <view class="subtitle">
+        <text class="subtitle-icon">✨</text>
+        <view class="subtitle-text">
+          <text class="main-text">积分兑换</text>
+          <text class="sub-text">好礼等你拿</text>
+        </view>
       </view>
     </view>
-    <view class="security-text">安全登录，开启积分之旅</view>
-
-    <!-- 微信一键登录 -->
-    <view class="form">
-      <!-- 暂不登录按钮 -->
-      <view class="skip-login" @tap="skipLogin">
-        <text>暂不登录，随便看看 ></text>
+    
+    <!-- 登录表单卡片 -->
+    <view class="form-card">
+      <view class="card-title">欢迎登录</view>
+      
+      <!-- 邀请码（可选） -->
+      <view v-if="showReferrer" class="form-group">
+        <view class="form-label">邀请码 (选填)</view>
+        <view class="input-box">
+          <text class="input-icon">🎫</text>
+          <input 
+            v-model="form.referrerCode" 
+            class="input-field" 
+            placeholder="有邀请码请填写"
+          />
+        </view>
       </view>
-
-      <view class="form-label">邀请码 (选填)</view>
-      <view class="input-wrapper">
-        <input 
-          v-model="form.referrerCode" 
-          class="input-field" 
-          placeholder="有邀请码请填写"
-        />
-      </view>
-
-      <!-- 微信手机号快捷登录按钮 -->
-      <button 
-        class="wx-login-btn"
-        open-type="getPhoneNumber"
-        @getphonenumber="handleWxLogin"
-        :loading="loading"
-        :disabled="loading"
-      >
-        <text class="wx-icon">📱</text>
-        <text>{{ loading ? '登录中...' : '微信快捷登录' }}</text>
-      </button>
-
-      <!-- 切换到短信验证码登录 -->
-      <view class="switch-login" @tap="showSmsLogin = !showSmsLogin">
-        <text>{{ showSmsLogin ? '返回微信登录' : '使用短信验证码登录' }}</text>
-      </view>
-
-      <!-- 短信验证码登录表单（可选） -->
-      <view v-if="showSmsLogin" class="sms-form">
+      
+      <!-- 手机号码 -->
+      <view class="form-group">
         <view class="form-label">手机号码</view>
-        <view class="input-wrapper">
-          <text class="country-code">📞 +86</text>
+        <view class="input-box">
+          <text class="input-icon">📞</text>
+          <text class="country-code">+86</text>
+          <view class="divider"></view>
           <input 
             v-model="form.phone" 
             type="number" 
+            class="input-field" 
             placeholder="请输入手机号"
             maxlength="11"
-            class="input-field"
           />
         </view>
-
+      </view>
+      
+      <!-- 验证码 -->
+      <view class="form-group">
         <view class="form-label">验证码</view>
-        <view class="input-wrapper code-wrapper">
-          <text class="code-icon">💬</text>
+        <view class="input-box code-box">
+          <text class="input-icon">💬</text>
           <input 
             v-model="form.code" 
             type="number" 
-            placeholder="请输入验证码"
+            class="input-field" 
+            placeholder="6位验证码"
             maxlength="6"
-            class="input-field"
           />
           <button 
             class="code-btn" 
-            :disabled="countdown > 0"
+            :disabled="countdown > 0 || !isPhoneValid"
             @click="sendCode"
           >
             {{ countdown > 0 ? `${countdown}s` : '获取验证码' }}
           </button>
         </view>
-
-        <view 
-          :class="['btn', 'btn-primary', 'login-btn', { 'btn-disabled': !canLogin || loading }]"
-          @tap="handleSmsLogin"
-        >
-          <text>{{ loading ? '登录中...' : '登录 / 注册' }}</text>
-        </view>
       </view>
-
+      
+      <!-- 登录按钮 -->
+      <button 
+        class="login-btn"
+        :class="{ 'disabled': !canLogin || loading }"
+        @click="handleLogin"
+        :loading="loading"
+      >
+        <text class="btn-icon">✨</text>
+        <text>{{ loading ? '登录中...' : '立即登录' }}</text>
+      </button>
+      
+      <!-- 协议勾选 -->
       <view class="agreement">
         <checkbox-group @change="onAgreementChange">
           <label class="agreement-label">
@@ -109,7 +98,33 @@
             </text>
           </label>
         </checkbox-group>
-        <view v-if="!agreed" class="agreement-tip">请先阅读并同意协议</view>
+      </view>
+      
+      <!-- 安全提示 -->
+      <view class="security-tip">
+        <text class="security-icon">🔒</text>
+        <text>安全加密 · 信息保护</text>
+      </view>
+    </view>
+    
+    <!-- 暂不登录 -->
+    <view class="skip-login" @tap="skipLogin">
+      <text>暂不登录，随便看看</text>
+    </view>
+    
+    <!-- 底部特性 -->
+    <view class="features">
+      <view class="feature-item">
+        <view class="feature-icon">🎯</view>
+        <text class="feature-text">简单易用</text>
+      </view>
+      <view class="feature-item">
+        <view class="feature-icon">🎁</view>
+        <text class="feature-text">丰富奖励</text>
+      </view>
+      <view class="feature-item">
+        <view class="feature-icon">🔐</view>
+        <text class="feature-text">安全可靠</text>
       </view>
     </view>
   </view>
@@ -124,8 +139,8 @@ const userStore = useUserStore()
 
 const loading = ref(false)
 const countdown = ref(0)
-const showSmsLogin = ref(false)
-const agreed = ref(false)  // 用户是否同意协议
+const agreed = ref(false)
+const showReferrer = ref(false)
 let timer = null
 
 const form = reactive({
@@ -135,52 +150,9 @@ const form = reactive({
 })
 
 const isPhoneValid = computed(() => /^1[3-9]\d{9}$/.test(form.phone))
-const canLogin = computed(() => isPhoneValid.value && form.code.length >= 4)
+const canLogin = computed(() => isPhoneValid.value && form.code.length >= 4 && agreed.value)
 
-// 微信一键登录
-const handleWxLogin = async (e) => {
-  // 检查是否同意协议
-  if (!agreed.value) {
-    uni.showToast({ title: '请先阅读并同意用户协议和隐私政策', icon: 'none' })
-    return
-  }
-  
-  if (e.detail.errMsg !== 'getPhoneNumber:ok') {
-    uni.showToast({ title: '需要授权手机号才能登录', icon: 'none' })
-    return
-  }
-
-  loading.value = true
-  try {
-    // 调用后端微信登录接口
-    const res = await post('/auth/wx-login', {
-      code: e.detail.code,
-      referrer_code: form.referrerCode || undefined
-    })
-
-    if (res.data?.access_token) {
-      // 保存token和用户信息
-      uni.setStorageSync('token', res.data.access_token)
-      userStore.setUser(res.data.user)
-      
-      uni.showToast({ title: '登录成功', icon: 'success' })
-      
-      setTimeout(() => {
-        uni.switchTab({ url: '/pages/index/index' })
-      }, 1000)
-    }
-  } catch (error) {
-    console.error('微信登录失败:', error)
-    uni.showToast({ 
-      title: error.message || '登录失败，请重试', 
-      icon: 'none' 
-    })
-  } finally {
-    loading.value = false
-  }
-}
-
-// 发送短信验证码
+// 发送验证码
 const sendCode = async () => {
   if (countdown.value > 0 || !isPhoneValid.value) return
 
@@ -210,8 +182,8 @@ const sendCode = async () => {
   }
 }
 
-// 短信验证码登录
-const handleSmsLogin = async () => {
+// 登录
+const handleLogin = async () => {
   if (!agreed.value) {
     uni.showToast({ title: '请先阅读并同意用户协议和隐私政策', icon: 'none' })
     return
@@ -239,7 +211,7 @@ const onAgreementChange = (e) => {
   agreed.value = e.detail.value.length > 0
 }
 
-// 暂不登录，返回首页
+// 暂不登录
 const skipLogin = () => {
   uni.switchTab({ url: '/pages/index/index' })
 }
@@ -256,265 +228,282 @@ const openPrivacyPolicy = () => {
 </script>
 
 <style lang="scss" scoped>
-.login-container {
+.login-page {
   min-height: 100vh;
-  background: #F5F5F5;
-  padding: 80rpx 48rpx 48rpx;
+  background: linear-gradient(180deg, #FF8C42 0%, #FF6B35 30%, #F5F5F5 30%);
   display: flex;
   flex-direction: column;
-}
-
-// Logo和标题区域
-.header {
-  text-align: center;
-  margin-bottom: 60rpx;
-  
-  .logo {
-    width: 120rpx;
-    height: 120rpx;
-    background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%);
-    border-radius: 32rpx;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 24rpx;
-    box-shadow: 0 8rpx 24rpx rgba(255, 107, 53, 0.3);
-    
-    .logo-icon {
-      font-size: 64rpx;
-    }
-  }
-  
-  .app-name {
-    font-size: 48rpx;
-    font-weight: bold;
-    color: #303133;
-    margin-bottom: 12rpx;
-  }
-  
-  .app-desc {
-    font-size: 28rpx;
-    color: #909399;
-  }
-}
-
-// 三个图标装饰
-.icons-row {
-  display: flex;
-  justify-content: center;
   align-items: center;
-  gap: 48rpx;
+  padding-bottom: 40rpx;
+}
+
+// 顶部背景区域
+.header-bg {
+  width: 100%;
+  padding: 80rpx 0 120rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.logo-box {
+  width: 120rpx;
+  height: 120rpx;
+  background: #FFFFFF;
+  border-radius: 32rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.1);
+  margin-bottom: 24rpx;
+  
+  .logo-icon {
+    font-size: 64rpx;
+  }
+}
+
+.title {
+  font-size: 48rpx;
+  font-weight: bold;
+  color: #FFFFFF;
   margin-bottom: 16rpx;
+}
+
+.subtitle {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
   
-  .icon-item {
-    width: 96rpx;
-    height: 96rpx;
-    background: #FFF5F0;
-    border-radius: 24rpx;
+  .subtitle-icon {
+    font-size: 32rpx;
+  }
+  
+  .subtitle-text {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 48rpx;
-    transition: all 0.3s;
+    flex-direction: column;
     
-    &.active {
-      background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%);
-      transform: scale(1.1);
-      box-shadow: 0 8rpx 24rpx rgba(255, 107, 53, 0.3);
+    .main-text {
+      font-size: 28rpx;
+      color: #FFFFFF;
+      font-weight: 500;
+    }
+    
+    .sub-text {
+      font-size: 24rpx;
+      color: rgba(255, 255, 255, 0.9);
     }
   }
 }
 
-.security-text {
-  text-align: center;
-  font-size: 26rpx;
-  color: #606266;
-  margin-bottom: 48rpx;
+// 表单卡片
+.form-card {
+  width: calc(100% - 64rpx);
+  background: #FFFFFF;
+  border-radius: 32rpx;
+  padding: 48rpx 40rpx;
+  margin-top: -60rpx;
+  box-shadow: 0 8rpx 40rpx rgba(0, 0, 0, 0.08);
 }
 
-// 表单区域
-.form {
-  flex: 1;
+.card-title {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #303133;
+  text-align: center;
+  margin-bottom: 40rpx;
+}
+
+.form-group {
+  margin-bottom: 32rpx;
+}
+
+.form-label {
+  font-size: 28rpx;
+  color: #303133;
+  font-weight: 500;
+  margin-bottom: 16rpx;
+}
+
+.input-box {
+  display: flex;
+  align-items: center;
+  background: #F8F9FA;
+  border-radius: 16rpx;
+  padding: 0 24rpx;
+  height: 96rpx;
+  border: 2rpx solid transparent;
+  transition: all 0.3s;
   
-  .form-label {
-    font-size: 28rpx;
+  &:focus-within {
+    border-color: #FF6B35;
+    background: #FFFFFF;
+  }
+  
+  .input-icon {
+    font-size: 32rpx;
+    margin-right: 16rpx;
+    flex-shrink: 0;
+  }
+  
+  .country-code {
+    font-size: 30rpx;
     color: #303133;
     font-weight: 500;
-    margin-bottom: 16rpx;
   }
   
-  .input-wrapper {
-    display: flex;
-    align-items: center;
-    background: #FFFFFF;
-    border-radius: 16rpx;
-    padding: 0 24rpx;
-    margin-bottom: 32rpx;
-    height: 96rpx;
-    box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
-    
-    .country-code,
-    .code-icon {
-      font-size: 32rpx;
-      margin-right: 16rpx;
-      flex-shrink: 0;
-    }
-    
-    .input-field {
-      flex: 1;
-      height: 96rpx;
-      font-size: 30rpx;
-      border: none;
-    }
-    
-    &.code-wrapper {
-      padding-right: 0;
-    }
-    
-    .code-btn {
-      height: 96rpx;
-      padding: 0 24rpx;
-      background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%);
-      color: #FFFFFF;
-      font-size: 26rpx;
-      border-radius: 0 16rpx 16rpx 0;
-      border: none;
-      white-space: nowrap;
-      
-      &:disabled {
-        background: #E4E7ED;
-        color: #909399;
-      }
-    }
+  .divider {
+    width: 2rpx;
+    height: 32rpx;
+    background: #DCDFE6;
+    margin: 0 20rpx;
   }
   
-  .login-btn {
-    width: 100%;
+  .input-field {
+    flex: 1;
     height: 96rpx;
-    background: #C0C4CC;
-    color: #FFFFFF;
-    font-size: 32rpx;
-    font-weight: 500;
-    border-radius: 48rpx;
-    margin-top: 48rpx;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    font-size: 30rpx;
     border: none;
-    
-    &:not(.btn-disabled) {
-      background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%);
-      box-shadow: 0 8rpx 24rpx rgba(255, 107, 53, 0.3);
-    }
+    background: transparent;
   }
   
-  // 微信登录按钮
-  .wx-login-btn {
-    width: 100%;
+  &.code-box {
+    padding-right: 0;
+  }
+  
+  .code-btn {
     height: 96rpx;
-    background: linear-gradient(135deg, #07C160 0%, #06AD56 100%);
-    color: #FFFFFF;
-    font-size: 32rpx;
-    font-weight: 500;
-    border-radius: 48rpx;
-    margin-top: 32rpx;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: none;
-    box-shadow: 0 8rpx 24rpx rgba(7, 193, 96, 0.3);
-    
-    .wx-icon {
-      margin-right: 12rpx;
-      font-size: 36rpx;
-    }
-    
-    &[disabled] {
-      background: #C0C4CC;
-      box-shadow: none;
-    }
-  }
-  
-  // 切换登录方式
-  .switch-login {
-    text-align: center;
-    margin-top: 32rpx;
+    padding: 0 28rpx;
+    background: transparent;
+    color: #FF6B35;
     font-size: 26rpx;
-    color: #909399;
+    font-weight: 500;
+    border: none;
+    white-space: nowrap;
     
-    text {
-      color: #FF6B35;
-    }
-  }
-  
-  // 短信登录表单
-  .sms-form {
-    margin-top: 32rpx;
-    padding-top: 32rpx;
-    border-top: 1rpx solid #EBEEF5;
-  }
-  
-  .agreement {
-    margin-top: 32rpx;
-    
-    .agreement-label {
-      display: flex;
-      align-items: flex-start;
-      font-size: 24rpx;
-      color: #606266;
-      
-      checkbox {
-        margin-right: 12rpx;
-        flex-shrink: 0;
-        transform: scale(0.8);
-      }
-      
-      .agreement-text {
-        flex: 1;
-        line-height: 1.6;
-        
-        .link {
-          color: #FF6B35;
-        }
-      }
+    &:disabled {
+      color: #C0C4CC;
     }
     
-    .agreement-tip {
-      font-size: 22rpx;
-      color: #F56C6C;
-      margin-top: 8rpx;
-      padding-left: 40rpx;
-    }
-  }
-  
-  // 暂不登录按钮
-  .skip-login {
-    text-align: right;
-    margin-bottom: 24rpx;
-    
-    text {
-      font-size: 26rpx;
-      color: #909399;
+    &::after {
+      border: none;
     }
   }
 }
 
-// 底部安全提示
-.footer {
-  text-align: center;
-  padding: 32rpx 0;
+// 登录按钮
+.login-btn {
+  width: 100%;
+  height: 96rpx;
+  background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%);
+  color: #FFFFFF;
+  font-size: 32rpx;
+  font-weight: 500;
+  border-radius: 48rpx;
+  margin-top: 48rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8rpx;
+  border: none;
+  box-shadow: 0 8rpx 24rpx rgba(255, 107, 53, 0.3);
+  
+  .btn-icon {
+    margin-right: 12rpx;
+    font-size: 28rpx;
+  }
+  
+  &.disabled {
+    background: #E4E7ED;
+    color: #909399;
+    box-shadow: none;
+  }
+  
+  &::after {
+    border: none;
+  }
+}
+
+// 协议
+.agreement {
+  margin-top: 32rpx;
+  display: flex;
+  justify-content: center;
+  
+  .agreement-label {
+    display: flex;
+    align-items: center;
+    font-size: 24rpx;
+    color: #606266;
+    
+    checkbox {
+      transform: scale(0.75);
+      margin-right: 8rpx;
+    }
+    
+    .agreement-text {
+      line-height: 1.6;
+      
+      .link {
+        color: #FF6B35;
+      }
+    }
+  }
+}
+
+// 安全提示
+.security-tip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 24rpx;
+  font-size: 24rpx;
+  color: #909399;
   
   .security-icon {
-    font-size: 28rpx;
+    margin-right: 8rpx;
+    font-size: 24rpx;
+  }
+}
+
+// 暂不登录
+.skip-login {
+  margin-top: 32rpx;
+  font-size: 28rpx;
+  color: #909399;
+  
+  text {
+    text-decoration: underline;
+  }
+}
+
+// 底部特性
+.features {
+  display: flex;
+  justify-content: center;
+  gap: 80rpx;
+  margin-top: auto;
+  padding-top: 60rpx;
+}
+
+.feature-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12rpx;
+  
+  .feature-icon {
+    width: 80rpx;
+    height: 80rpx;
+    background: #FFF5F0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40rpx;
   }
   
-  .footer-text {
+  .feature-text {
     font-size: 24rpx;
-    color: #909399;
+    color: #606266;
   }
 }
 </style>
