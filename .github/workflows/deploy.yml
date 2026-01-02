@@ -42,16 +42,32 @@ jobs:
             if [ ! -d ".git" ]; then
               echo "⚙️ 初始化 Git 仓库..."
               git init
-              git remote add origin git@github.com:helloandygithub/yunxiangjifen20251228.git
-            else
-              # 确保 remote 是正确的
-              if ! git remote | grep -q "origin"; then
-                 git remote add origin git@github.com:helloandygithub/yunxiangjifen20251228.git
-              else
-                 git remote set-url origin git@github.com:helloandygithub/yunxiangjifen20251228.git
-              fi
             fi
 
+            # 无论如何，强制配置 remote 为 HTTPS 格式，并在 URL 中嵌入 Token (如果有)
+            # 注意：为了安全，尽量使用 HTTPS 并且依赖 GitHub Actions 的 SSH Agent Forwarding? 
+            # 不，最简单的是解决 SSH Host Key 问题。
+            
+            # 方案：手动添加 GitHub 的指纹到 known_hosts
+            mkdir -p ~/.ssh
+            ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts 2>/dev/null
+            
+            # 使用 SSH 协议 (前提是服务器已经配置了 Deploy Key，或者是 Public 仓库)
+            # 如果服务器本身没有权限拉取代码，我们需要把 Action 里的 SSH Key 转发过去
+            # 但 Action 里的 Key 是用来连服务器的，不一定是用来连 GitHub 的。
+            # 让用户去配 Deploy Key 太麻烦。
+            
+            # 终极方案：使用 HTTPS 克隆公共仓库 (如果仓库是 Public)
+            # 或者使用 embedded token (如果是 Private)
+            # 这里假设您的仓库是 Public 的，或者您愿意稍后把它设为 Public
+            # 或者，我们尝试使用 SSH Agent Forwarding (虽然 ssh-action 支持，但不一定好用)
+            
+            # 让我们试试 HTTPS 方式 (不带 Token，如果仓库是 Public 的话能通)
+            # 如果仓库是 Private，您需要把 GITHUB_TOKEN 传进来
+            
+            git remote remove origin 2>/dev/null || true
+            git remote add origin https://github.com/helloandygithub/yunxiangjifen20251228.git
+            
             echo "⬇️ 拉取最新代码..."
             git fetch --all
             git reset --hard origin/main
