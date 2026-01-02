@@ -85,6 +85,26 @@
         <text>{{ loading ? '登录中...' : '立即登录' }}</text>
       </button>
       
+      <!-- #ifdef MP-WEIXIN -->
+      <!-- 微信快捷登录（仅小程序） -->
+      <view class="divider-line">
+        <view class="line"></view>
+        <text class="divider-text">或</text>
+        <view class="line"></view>
+      </view>
+      
+      <button 
+        class="wx-login-btn"
+        open-type="getPhoneNumber"
+        @getphonenumber="handleWxLogin"
+        :loading="wxLoading"
+        :disabled="wxLoading || !agreed"
+      >
+        <text class="wx-icon">📱</text>
+        <text>{{ wxLoading ? '登录中...' : '微信一键登录' }}</text>
+      </button>
+      <!-- #endif -->
+      
       <!-- 协议勾选 -->
       <view class="agreement">
         <checkbox-group @change="onAgreementChange">
@@ -137,6 +157,7 @@ import { post } from '@/utils/request'
 
 const userStore = useUserStore()
 
+const wxLoading = ref(false)
 const loading = ref(false)
 const countdown = ref(0)
 const agreed = ref(false)
@@ -203,6 +224,48 @@ const handleLogin = async () => {
     console.error(error)
   } finally {
     loading.value = false
+  }
+}
+
+// 微信一键登录
+const handleWxLogin = async (e) => {
+  if (!agreed.value) {
+    uni.showToast({ title: '请先阅读并同意用户协议和隐私政策', icon: 'none' })
+    return
+  }
+  
+  if (e.detail.errMsg !== 'getPhoneNumber:ok') {
+    uni.showToast({ title: '需要授权手机号才能登录', icon: 'none' })
+    return
+  }
+
+  wxLoading.value = true
+  try {
+    // 调用后端微信登录接口
+    const res = await post('/auth/wx-login', {
+      code: e.detail.code,
+      referrer_code: form.referrerCode || undefined
+    })
+
+    if (res.data?.access_token) {
+      // 保存token和用户信息
+      uni.setStorageSync('token', res.data.access_token)
+      userStore.setUser(res.data.user)
+      
+      uni.showToast({ title: '登录成功', icon: 'success' })
+      
+      setTimeout(() => {
+        uni.switchTab({ url: '/pages/index/index' })
+      }, 1000)
+    }
+  } catch (error) {
+    console.error('微信登录失败:', error)
+    uni.showToast({ 
+      title: error.message || '登录失败，请重试', 
+      icon: 'none' 
+    })
+  } finally {
+    wxLoading.value = false
   }
 }
 
@@ -415,6 +478,53 @@ const openPrivacyPolicy = () => {
     background: #E4E7ED;
     color: #909399;
     box-shadow: none;
+  }
+  
+  &::after {
+    border: none;
+  }
+}
+
+// 微信登录分割线与按钮
+.divider-line {
+  display: flex;
+  align-items: center;
+  margin: 32rpx 0;
+  
+  .line {
+    flex: 1;
+    height: 1rpx;
+    background: #EBEEF5;
+  }
+  
+  .divider-text {
+    margin: 0 16rpx;
+    font-size: 24rpx;
+    color: #909399;
+  }
+}
+
+.wx-login-btn {
+  width: 100%;
+  height: 96rpx;
+  background: #07C160;
+  color: #FFFFFF;
+  font-size: 32rpx;
+  font-weight: 500;
+  border-radius: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  
+  .wx-icon {
+    font-size: 36rpx;
+    margin-right: 12rpx;
+  }
+  
+  &[disabled] {
+    background: #A0CFFF;
+    opacity: 0.7;
   }
   
   &::after {
