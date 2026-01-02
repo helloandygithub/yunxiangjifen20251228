@@ -22,6 +22,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - app_network
 
   # Redis 缓存
   redis:
@@ -33,6 +35,8 @@ services:
     volumes:
       - redis_data:/data
     command: redis-server --appendonly yes
+    networks:
+      - app_network
 
   # FastAPI 后端
   backend:
@@ -65,6 +69,8 @@ services:
       redis:
         condition: service_started
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --workers 4
+    networks:
+      - app_network
 
   # Nginx 反向代理
   nginx:
@@ -82,7 +88,14 @@ services:
       - ./webapp/dist/build/h5:/usr/share/nginx/html/webapp
     depends_on:
       - backend
+    networks:
+      - app_network
 
 volumes:
   mysql_data:
   redis_data:
+
+
+networks:
+  app_network:
+    driver: bridge
