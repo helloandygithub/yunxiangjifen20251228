@@ -225,10 +225,11 @@ const handleInvite = () => {
   })
 }
 
-onMounted(() => {
+onMounted(async () => {
   fetchActivities()
+  // 主动验证token是否有效，如果401会自动清除登录态
   if (isLoggedIn.value) {
-    userStore.fetchUserInfo()
+    await userStore.fetchUserInfo()
   }
 })
 
