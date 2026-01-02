@@ -47,3 +47,14 @@ jobs:
             
             echo "========== 4. 检查 Docker 容器 =========="
             docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+            
+            echo "========== 5. 查看后端日志 (最新100行) =========="
+            docker logs --tail 100 points_backend
+            
+            echo "========== 6. Nginx 错误日志 =========="
+            docker exec points_nginx tail -n 50 /var/log/nginx/error.log || echo "无法读取 Nginx 日志"
+            
+            echo "========== 7. 测试网络连通性 (从 Nginx 容器 ping 后端) =========="
+            # 尝试通过 Service Name 和 Container Name 两个名字去 ping
+            docker exec points_nginx ping -c 3 backend || echo "Ping 'backend' failed"
+            docker exec points_nginx ping -c 3 points_backend || echo "Ping 'points_backend' failed"
