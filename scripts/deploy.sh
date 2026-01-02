@@ -65,7 +65,10 @@ echo ""
 # 停止旧服务
 echo -e "${YELLOW}[5/8] 停止旧服务...${NC}"
 docker-compose -f docker-compose.prod.yml down || true
-echo -e "${GREEN}✓ 旧服务已停止${NC}"
+# 强力清场: 确保没有残留容器占用名字
+echo -e "${YELLOW}确保旧容器已移除...${NC}"
+docker rm -f points_backend points_nginx points_mysql points_redis 2>/dev/null || true
+echo -e "${GREEN}✓ 旧服务已停止并清理${NC}"
 echo ""
 
 # 构建镜像
