@@ -5,13 +5,13 @@
       <view class="header-bg"></view>
       <view class="header-content safe-area-top">
         <!-- 用户信息卡片 -->
-        <view class="user-card">
+        <view class="user-card" @tap="handleUserCardClick">
           <view class="avatar">
             <text>👤</text>
           </view>
           <view class="user-info">
-            <text class="username">{{ userStore.userInfo?.phone ? '用户' + userStore.userInfo.phone.slice(-4) : '未登录' }}</text>
-            <text class="phone">{{ formatPhone(userStore.userInfo?.phone) }}</text>
+            <text class="username">{{ userStore.isLoggedIn ? (userStore.userInfo?.phone ? '用户' + userStore.userInfo.phone.slice(-4) : '用户') : '未登录' }}</text>
+            <text class="phone">{{ userStore.isLoggedIn ? formatPhone(userStore.userInfo?.phone) : '点击登录' }}</text>
           </view>
         </view>
         
@@ -87,7 +87,8 @@
     </view>
 
     <!-- 退出登录 -->
-    <view class="logout-btn" @tap="handleLogout">
+    <!-- 退出登录 -->
+    <view v-if="userStore.isLoggedIn" class="logout-btn" @tap="handleLogout">
       <text>退出登录</text>
     </view>
   </view>
@@ -128,6 +129,10 @@ const fetchStats = async () => {
 }
 
 const copyInviteCode = () => {
+  if (!userStore.isLoggedIn) {
+    uni.navigateTo({ url: '/pages/login/index' })
+    return
+  }
   if (!userStore.userInfo?.invite_code) return
   
   uni.setClipboardData({
@@ -139,6 +144,12 @@ const copyInviteCode = () => {
       })
     }
   })
+}
+
+const handleUserCardClick = () => {
+  if (!userStore.isLoggedIn) {
+    uni.navigateTo({ url: '/pages/login/index' })
+  }
 }
 
 const goToRecords = (type) => {
@@ -172,20 +183,10 @@ const handleLogout = async () => {
 }
 
 onMounted(() => {
-  if (!userStore.isLoggedIn) {
-    uni.showModal({
-      title: '提示',
-      content: '请先登录',
-      confirmText: '去登录',
-      showCancel: false,
-      success: () => {
-        uni.navigateTo({ url: '/pages/login/index' })
-      }
-    })
-    return
+  if (userStore.isLoggedIn) {
+    userStore.fetchUserInfo()
+    fetchStats()
   }
-  userStore.fetchUserInfo()
-  fetchStats()
 })
 </script>
 
