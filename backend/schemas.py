@@ -30,17 +30,6 @@ class WxLoginRequest(BaseModel):
     referrer_code: Optional[str] = None
 
 
-
-
-
-class TokenResponse(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
-    user: UserProfile
-    openid: Optional[str] = None
-    unionid: Optional[str] = None
-
-
 class UserProfile(BaseModel):
     id: int
     phone: Optional[str] = None
@@ -53,6 +42,18 @@ class UserProfile(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserProfile
+    openid: Optional[str] = None
+    unionid: Optional[str] = None
+
+
+# ============ 活动相关 ============
+class FormFieldSchema(BaseModel):
     key: str
     label: str
     type: str  # text, textarea, image, file, number, select, date
@@ -212,7 +213,7 @@ class AdminResponse(BaseModel):
 
 class UserResponse(BaseModel):
     id: int
-    phone: str
+    phone: Optional[str] = None
     points_balance: int
     invite_code: str
     is_active: bool
