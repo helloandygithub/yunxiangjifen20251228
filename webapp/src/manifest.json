@@ -1,0 +1,41 @@
+{
+  "name": "积分活动平台",
+  "appid": "",
+  "description": "积分活动运营平台 - 参与活动赢取积分",
+  "versionName": "1.0.0",
+  "versionCode": "100",
+  "transformPx": false,
+  "app-plus": {
+    "usingComponents": true,
+    "splashscreen": {
+      "alwaysShowBeforeRender": true,
+      "waiting": true,
+      "autoclose": true,
+      "delay": 0
+    }
+  },
+  "quickapp": {},
+  "mp-weixin": {
+    "appid": "",
+    "setting": {
+      "urlCheck": false
+    },
+    "usingComponents": true
+  },
+  "h5": {
+    "devServer": {
+      "port": 5173,
+      "host": "0.0.0.0",
+      "proxy": {
+        "/api": {
+          "target": "http://api:8000",
+          "changeOrigin": true
+        }
+      }
+    },
+    "router": {
+      "mode": "hash"
+    },
+    "title": "积分活动平台"
+  }
+}

@@ -1,0 +1,194 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #app {
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.layout {
+  height: 100%;
+  
+  .aside {
+    background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+    transition: width 0.3s;
+    
+    .logo {
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 18px;
+      font-weight: bold;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      
+      .logo-icon {
+        font-size: 24px;
+        margin-right: 8px;
+      }
+    }
+    
+    .el-menu {
+      border-right: none;
+      background: transparent;
+    }
+  }
+  
+  .main-container {
+    display: flex;
+    flex-direction: column;
+    
+    .header {
+      height: 60px;
+      background: #fff;
+      border-bottom: 1px solid #e4e7ed;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      
+      .header-left {
+        display: flex;
+        align-items: center;
+        
+        .collapse-btn {
+          font-size: 20px;
+          cursor: pointer;
+          color: #606266;
+          
+          &:hover {
+            color: #409eff;
+          }
+        }
+        
+        .breadcrumb {
+          margin-left: 20px;
+        }
+      }
+      
+      .header-right {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+    }
+    
+    .main-content {
+      flex: 1;
+      padding: 20px;
+      background: #f0f2f5;
+      overflow: auto;
+    }
+  }
+}
+
+// 卡片样式
+.page-card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
+}
+
+// 表格操作按钮
+.table-actions {
+  display: flex;
+  gap: 8px;
+}
+
+// 状态标签
+.status-tag {
+  &.pending { background: #e6a23c; }
+  &.approved { background: #67c23a; }
+  &.rejected { background: #f56c6c; }
+}
+
+// 搜索表单
+.search-form {
+  margin-bottom: 20px;
+  
+  .el-form-item {
+    margin-bottom: 0;
+  }
+}
+
+// 分页
+.pagination-container {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+// 动态表单编辑器
+.form-schema-editor {
+  .field-item {
+    background: #f5f7fa;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 12px;
+    position: relative;
+    
+    .field-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      
+      .field-title {
+        font-weight: 500;
+        color: #303133;
+      }
+    }
+    
+    .field-content {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+  }
+}
+
+// 图片预览
+.image-preview {
+  cursor: pointer;
+  border-radius: 4px;
+  object-fit: cover;
+  
+  &:hover {
+    opacity: 0.8;
+  }
+}
+
+// 审核详情
+.audit-detail {
+  .submission-data {
+    background: #f5f7fa;
+    border-radius: 8px;
+    padding: 16px;
+    
+    .data-item {
+      display: flex;
+      margin-bottom: 12px;
+      
+      &:last-child {
+        margin-bottom: 0;
+      }
+      
+      .label {
+        width: 100px;
+        color: #909399;
+        flex-shrink: 0;
+      }
+      
+      .value {
+        flex: 1;
+        color: #303133;
+      }
+    }
+  }
+}

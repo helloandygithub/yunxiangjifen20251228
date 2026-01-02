@@ -1,0 +1,43 @@
+#!/bin/bash
+# SSH密钥配置脚本
+
+echo "=========================================="
+echo "SSH密钥配置"
+echo "=========================================="
+echo ""
+
+# 公钥内容
+PUBLIC_KEY="ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDR6GygluO6+LuvAKt0xsUHyggeQAH4QR3gtiDy/b2J8iQyhdTo+055plZ9VwmRrq+our5LSWfASIPo/ZS1r9KpOaXy0vkB2bexgRyLrvidFG/PqyVPvU5/X8CTI4X5r6PqmrcRjzizNIx+zjjPwwvbL5826JKuuXrZBAVMpKfnr1B2tPUE4AjkH1wdqYdnh6PcyHgHTzF9tmYkOAlqSbsK4Dr9AYVZV1Ra71nHntgQfuwi0f/uEJcbu/9DpiRTs9PUkQa+jsttxhmFZqs1ntmBAk2I20lFb6huwmoYS8/mb5hK4ac3RDn389Pnw9rsf+ZzK+9AKgkm7gVXnlQmIXoZfCfGW1v46emx6C7qADWsAUVjR4KwWZui1tM0BckBZ9yj9mBJPjOyY4QTbgJhi3pc3An5LqJJgIw4yng9trBXtl90/W8TUbxfrGzjx8k581HYHvhj7dup/TZy9amsukcqvIH3/sQ5uUi3HpwMzLRS1JtHCFq+oRUZfBxsSRlPnbaLpIwdib8S8dzmWeCcLo8+0SSkd7cdNJCwMTok1Aa/9pOOoZ5XHyMVVuqYm2rXrL5u51kWhBn925IWfSzS8ec9iaHdeLLFm9lJ8i5PDyWAGRoWbXXjGTSnHwnf0J/EXkkd3wiM5eop0CfIv7o9+t0VwRJZ7IK5MfPIW2PCCd2o5Q== kongkevin@cloudexp"
+
+echo "公钥已生成在本地："
+echo "~/.ssh/cloudexp_rsa (私钥)"
+echo "~/.ssh/cloudexp_rsa.pub (公钥)"
+echo ""
+
+echo "请手动执行以下步骤："
+echo ""
+echo "1. SSH登录服务器（使用密码）："
+echo "   ssh ubuntu@129.211.167.131"
+echo "   密码: @A12wsxzaq"
+echo ""
+echo "2. 在服务器上执行以下命令："
+echo ""
+echo "   mkdir -p ~/.ssh"
+echo "   chmod 700 ~/.ssh"
+echo "   echo '${PUBLIC_KEY}' >> ~/.ssh/authorized_keys"
+echo "   chmod 600 ~/.ssh/authorized_keys"
+echo ""
+echo "3. 退出服务器，测试密钥登录："
+echo "   ssh -i ~/.ssh/cloudexp_rsa ubuntu@129.211.167.131"
+echo ""
+echo "4. 配置SSH config（可选，更方便）："
+echo "   cat >> ~/.ssh/config << 'EOF'"
+echo "Host cloudexp"
+echo "    HostName 129.211.167.131"
+echo "    User ubuntu"
+echo "    IdentityFile ~/.ssh/cloudexp_rsa"
+echo "EOF"
+echo ""
+echo "   配置后可以直接使用: ssh cloudexp"
+echo ""
+echo "=========================================="

@@ -1,0 +1,97 @@
+services:
+  # MySQL 数据库
+  db:
+    image: mysql:8.0
+    container_name: yxjf_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root123456
+      MYSQL_DATABASE: yunxiang_points
+    ports:
+      - "3306:3306"
+    volumes:
+      - dbdata:/var/lib/mysql
+      - ./api/database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./api/database/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Node.js Express 后端 API
+  api:
+    image: node:18-alpine
+    container_name: yxjf_api
+    restart: always
+    working_dir: /app
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./api:/app
+      - api_modules:/app/node_modules
+    environment:
+      - PORT=8000
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_USER=root
+      - DB_PASSWORD=root123456
+      - DB_NAME=yunxiang_points
+      - JWT_SECRET=yunxiang-points-secret-key-2025
+    depends_on:
+      db:
+        condition: service_healthy
+    command: sh -c "npm install && npm run dev"
+
+  # Vue3 管理后台
+  admin:
+    image: node:18-alpine
+    container_name: yxjf_admin
+    restart: always
+    working_dir: /app
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./admin:/app
+      - admin_modules:/app/node_modules
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8000/api
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 3001"
+
+  # PC端用户页面
+  pcuser:
+    image: node:18-alpine
+    container_name: yxjf_pcuser
+    restart: always
+    working_dir: /app
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./pc-user:/app
+      - pcuser_modules:/app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:8000/api
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 3000"
+
+  # uni-app 小程序端 (H5模式)
+  webapp:
+    image: node:18-alpine
+    container_name: yxjf_webapp
+    restart: always
+    working_dir: /app
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./webapp:/app
+      - webapp_modules:/app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:8000/api
+    command: sh -c "npm install && npm run dev:h5"
+
+volumes:
+  dbdata:
+  api_modules:
+  admin_modules:
+  pcuser_modules:
+  webapp_modules:

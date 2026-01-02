@@ -1,0 +1,49 @@
+name: Check Server Status
+
+on: [workflow_dispatch]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Status via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            echo "========== 1. 身份验证 =========="
+            whoami
+            echo "当前登录用户: $(whoami)"
+            
+            echo "========== 2. 检查项目目录 =========="
+            # 尝试根据运维文档的路径
+            TARGET_DIR="/home/ubuntu/points-platform"
+            
+            if [ -d "$TARGET_DIR" ]; then
+                echo "✅ 找到项目目录: $TARGET_DIR"
+                cd "$TARGET_DIR"
+                ls -la
+            else
+                echo "❌ 未找到目录: $TARGET_DIR"
+                # 尝试查找其他可能位置
+                find /home -name "backend" -type d -maxdepth 3 2>/dev/null
+                exit 1
+            fi
+            
+            echo "========== 3. 检查 Git 状态 =========="
+            if [ -d ".git" ]; then
+                echo "✅ 这是一个 Git 仓库"
+                echo "Remote URL:"
+                git remote -v
+                echo "Latest Commit:"
+                git log -1 --format="%h - %s (%cd)"
+                echo "Current Status (是否有修改):"
+                git status
+            else
+                echo "⚠️ 这不是一个 Git 仓库 (未初始化)"
+            fi
+            
+            echo "========== 4. 检查 Docker 容器 =========="
+            docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"

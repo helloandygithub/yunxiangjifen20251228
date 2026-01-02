@@ -1,0 +1,87 @@
+version: '3.8'
+
+services:
+  # MySQL 数据库 (生产环境建议使用腾讯云MySQL)
+  mysql:
+    image: mysql:8.0
+    container_name: points_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: points_platform
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis 缓存
+  redis:
+    image: redis:7-alpine
+    container_name: points_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+
+  # FastAPI 后端
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: points_backend
+    restart: always
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./uploads:/app/uploads
+    environment:
+      - DATABASE_URL=mysql+pymysql://${MYSQL_USER}:${MYSQL_PASSWORD}@mysql:3306/points_platform
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=${SECRET_KEY}
+      - DEBUG=false
+      - COS_SECRET_ID=${COS_SECRET_ID}
+      - COS_SECRET_KEY=${COS_SECRET_KEY}
+      - COS_REGION=${COS_REGION}
+      - COS_BUCKET=${COS_BUCKET}
+      - COS_DOMAIN=${COS_DOMAIN}
+      - SMS_SDK_APP_ID=${SMS_SDK_APP_ID}
+      - SMS_SIGN_NAME=${SMS_SIGN_NAME}
+      - SMS_TEMPLATE_ID=${SMS_TEMPLATE_ID}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --workers 4
+
+  # Nginx 反向代理
+  nginx:
+    image: nginx:alpine
+    container_name: points_nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+      - ./admin/dist:/usr/share/nginx/html/admin
+      - ./pc-user/dist:/usr/share/nginx/html/pc-user
+      - ./webapp/dist/build/h5:/usr/share/nginx/html/webapp
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:
+  redis_data:
