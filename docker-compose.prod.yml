@@ -63,6 +63,8 @@ services:
       - SMS_SDK_APP_ID=${SMS_SDK_APP_ID}
       - SMS_SIGN_NAME=${SMS_SIGN_NAME}
       - SMS_TEMPLATE_ID=${SMS_TEMPLATE_ID}
+      - WX_APPID=${WECHAT_APP_ID}
+      - WX_SECRET=${WECHAT_APP_SECRET}
     depends_on:
       mysql:
         condition: service_healthy
