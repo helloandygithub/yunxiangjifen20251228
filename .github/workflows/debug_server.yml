@@ -1,0 +1,67 @@
+name: Debug Server (Manual)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  debug:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Debug via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            echo "=============================================="
+            echo "🔍 1. Docker 容器状态 (Docker PS)"
+            echo "=============================================="
+            docker ps -a --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+            
+            echo ""
+            echo "=============================================="
+            echo "📝 2. Backend 日志 (Startup Logs - Head 50)"
+            echo "=============================================="
+            # 查看最开始启动的日志，看有没有 immediate crash
+            docker logs points_backend 2>&1 | head -n 50
+            
+            echo ""
+            echo "=============================================="
+            echo "📝 3. Backend 日志 (Recent Logs - Tail 100)"
+            echo "=============================================="
+            # 查看最近的日志
+            docker logs --tail 100 points_backend 2>&1
+            
+            echo ""
+            echo "=============================================="
+            echo "📝 4. Nginx 错误日志 (Tail 50)"
+            echo "=============================================="
+            docker exec points_nginx tail -n 50 /var/log/nginx/error.log || echo "❌ 无法读取 Nginx errorlog"
+            
+            echo ""
+            echo "=============================================="
+            echo "🌐 5. 网络连通性测试 (Nginx -> Backend)"
+            echo "=============================================="
+            # 测试 DNS 解析
+            echo ">> Testing Ping 'points_backend' from Nginx container..."
+            docker exec points_nginx ping -c 2 points_backend || echo "❌ Ping points_backend FAILED"
+            
+            echo ""
+            echo ">> Testing Ping 'backend' (Service Name) from Nginx container..."
+            docker exec points_nginx ping -c 2 backend || echo "❌ Ping backend FAILED"
+            
+            echo ""
+            echo ">> Testing HTTP Connection (Curl) from Nginx container..."
+            # 使用 curl 测试端口是否通
+            docker exec points_nginx curl -v --connect-timeout 5 http://points_backend:8000/docs || echo "❌ Curl failed"
+            
+            echo ""
+            echo "=============================================="
+            echo "🗄️ 6. 数据库连接测试 (Backend -> DB)"
+            echo "=============================================="
+            # 简单检查后端能否 ping 通数据库
+            docker exec points_backend ping -c 2 points_mysql || echo "❌ Ping points_mysql FAILED"
+            
+            echo "=============================================="
+            echo "✅ diagnostic finished"
